@@ -1,0 +1,6 @@
+{
+  "name": "EcoTrack",
+  "description": "EcoTrack is a modern, premium, AI-powered sustainability dashboard featuring real-time insights, interactive carbon metrics, goal tracking, and an intelligent sustainability co-pilot.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
