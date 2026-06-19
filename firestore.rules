@@ -1,0 +1,145 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity validation functions
+    function isValidUserProfile(user) {
+      return user.keys().hasAll(['userId', 'streakCount', 'theme'])
+        && user.keys().size() == 3
+        && user.userId is string
+        && user.userId.size() <= 128
+        && user.streakCount is int
+        && user.streakCount >= 0
+        && user.theme is string
+        && (user.theme == 'light' || user.theme == 'dark');
+    }
+
+    function isValidActivity(act) {
+      return act.keys().hasAll(['id', 'timestamp', 'category', 'label', 'value', 'carbonAmount'])
+        && act.keys().size() == 6
+        && act.id is string
+        && act.id.size() <= 128
+        && act.timestamp is string
+        && act.category is string
+        && (act.category == 'transport' || act.category == 'electricity' || act.category == 'food' || act.category == 'shopping')
+        && act.label is string
+        && act.label.size() <= 200
+        && (act.value is number || act.value is int || act.value is float)
+        && (act.carbonAmount is number || act.carbonAmount is int || act.carbonAmount is float)
+        && act.carbonAmount >= 0;
+    }
+
+    function isValidGoal(goal) {
+      return goal.keys().hasAll(['id', 'title', 'category', 'targetKg', 'currentKg', 'deadline', 'isCompleted'])
+        && goal.keys().size() <= 8
+        && goal.id is string
+        && goal.id.size() <= 128
+        && goal.title is string
+        && goal.title.size() <= 200
+        && goal.category is string
+        && (goal.category == 'transport' || goal.category == 'electricity' || goal.category == 'food' || goal.category == 'shopping' || goal.category == 'general')
+        && (goal.targetKg is number || goal.targetKg is int || goal.targetKg is float)
+        && (goal.currentKg is number || goal.currentKg is int || goal.currentKg is float)
+        && goal.deadline is string
+        && goal.isCompleted is bool
+        && (!goal.keys().hasAny(['isArchived']) || goal.isArchived is bool);
+    }
+
+    function isValidBadge(badge) {
+      return badge.keys().hasAll(['id', 'title', 'description', 'iconName', 'colorClass'])
+        && badge.keys().size() >= 5
+        && badge.id is string
+        && badge.id.size() <= 128
+        && badge.title is string
+        && badge.title.size() <= 100
+        && badge.description is string
+        && badge.description.size() <= 300
+        && badge.iconName is string
+        && badge.colorClass is string
+        && (!badge.keys().hasAny(['unlockedAt']) || badge.unlockedAt == null || badge.unlockedAt is string);
+    }
+
+    function isValidCalculation(calc) {
+      return calc.keys().hasAll([
+        'id', 'timestamp', 'month', 'transportDistance', 'vehicleType',
+        'electricityUsage', 'waterUsage', 'foodHabit', 'shoppingFrequency',
+        'emissionsDaily', 'emissionsMonthly', 'emissionsAnnual', 'confidenceScore', 'highestCategory'
+      ])
+        && calc.keys().size() == 14
+        && calc.id is string
+        && calc.id.size() <= 128
+        && calc.timestamp is string
+        && calc.month is string
+        && calc.month.size() <= 100
+        && (calc.transportDistance is number || calc.transportDistance is int || calc.transportDistance is float)
+        && calc.vehicleType is string
+        && (calc.electricityUsage is number || calc.electricityUsage is int || calc.electricityUsage is float)
+        && (calc.waterUsage is number || calc.waterUsage is int || calc.waterUsage is float)
+        && calc.foodHabit is string
+        && calc.shoppingFrequency is string
+        && (calc.emissionsDaily is number || calc.emissionsDaily is int || calc.emissionsDaily is float)
+        && (calc.emissionsMonthly is number || calc.emissionsMonthly is int || calc.emissionsMonthly is float)
+        && (calc.emissionsAnnual is number || calc.emissionsAnnual is int || calc.emissionsAnnual is float)
+        && (calc.confidenceScore is number || calc.confidenceScore is int || calc.confidenceScore is float)
+        && calc.highestCategory is string;
+    }
+
+    // Match patterns
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data) && request.resource.data.userId == existing().userId;
+      allow delete: if isOwner(userId);
+
+      // Activities Subcollection
+      match /activities/{activityId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidActivity(request.resource.data) && request.resource.data.id == activityId;
+        allow update: if isOwner(userId) && isValidActivity(request.resource.data) && request.resource.data.id == existing().id;
+        allow delete: if isOwner(userId);
+      }
+
+      // Goals Subcollection
+      match /goals/{goalId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidGoal(request.resource.data) && request.resource.data.id == goalId;
+        allow update: if isOwner(userId) && isValidGoal(request.resource.data) && request.resource.data.id == existing().id;
+        allow delete: if isOwner(userId);
+      }
+
+      // Badges Subcollection
+      match /badges/{badgeId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidBadge(request.resource.data) && request.resource.data.id == badgeId;
+        allow update: if isOwner(userId) && isValidBadge(request.resource.data) && request.resource.data.id == existing().id;
+        allow delete: if isOwner(userId);
+      }
+
+      // Calculations Subcollection
+      match /calculations/{calculationId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidCalculation(request.resource.data) && request.resource.data.id == calculationId;
+        allow update: if isOwner(userId) && isValidCalculation(request.resource.data) && request.resource.data.id == existing().id;
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

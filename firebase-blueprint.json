@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "Activity": {
+      "title": "Activity",
+      "description": "A carbon footprint event logged by the user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "category": { "type": "string", "enum": ["transport", "electricity", "food", "shopping"] },
+        "label": { "type": "string" },
+        "value": { "type": "number" },
+        "carbonAmount": { "type": "number" }
+      },
+      "required": ["id", "timestamp", "category", "label", "value", "carbonAmount"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "A carbon reduction goal set by or for the user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["transport", "electricity", "food", "shopping", "general"] },
+        "targetKg": { "type": "number" },
+        "currentKg": { "type": "number" },
+        "deadline": { "type": "string" },
+        "isCompleted": { "type": "boolean" },
+        "isArchived": { "type": "boolean" }
+      },
+      "required": ["id", "title", "category", "targetKg", "currentKg", "deadline", "isCompleted"]
+    },
+    "Badge": {
+      "title": "Badge",
+      "description": "An unlocked or unlockable milestone badge",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "unlockedAt": { "type": "string" },
+        "iconName": { "type": "string" },
+        "colorClass": { "type": "string" }
+      },
+      "required": ["id", "title", "description", "iconName", "colorClass"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Global user profile state",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "streakCount": { "type": "number" },
+        "theme": { "type": "string", "enum": ["light", "dark"] }
+      },
+      "required": ["userId", "streakCount", "theme"]
+    },
+    "Calculation": {
+      "title": "Calculation",
+      "description": "A saved carbon footprint calculation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "month": { "type": "string" },
+        "transportDistance": { "type": "number" },
+        "vehicleType": { "type": "string" },
+        "electricityUsage": { "type": "number" },
+        "waterUsage": { "type": "number" },
+        "foodHabit": { "type": "string" },
+        "shoppingFrequency": { "type": "string" },
+        "emissionsDaily": { "type": "number" },
+        "emissionsMonthly": { "type": "number" },
+        "emissionsAnnual": { "type": "number" },
+        "confidenceScore": { "type": "number" },
+        "highestCategory": { "type": "string" }
+      },
+      "required": [
+        "id",
+        "timestamp",
+        "month",
+        "transportDistance",
+        "vehicleType",
+        "electricityUsage",
+        "waterUsage",
+        "foodHabit",
+        "shoppingFrequency",
+        "emissionsDaily",
+        "emissionsMonthly",
+        "emissionsAnnual",
+        "confidenceScore",
+        "highestCategory"
+      ]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "The user's profiles"
+    },
+    "users/{userId}/activities/{activityId}": {
+      "schema": "Activity",
+      "description": "Activities subcollection"
+    },
+    "users/{userId}/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "Goals subcollection"
+    },
+    "users/{userId}/badges/{badgeId}": {
+      "schema": "Badge",
+      "description": "Badges subcollection"
+    },
+    "users/{userId}/calculations/{calculationId}": {
+      "schema": "Calculation",
+      "description": "Calculations subcollection"
+    }
+  }
+}

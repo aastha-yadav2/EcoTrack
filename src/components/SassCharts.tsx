@@ -503,3 +503,160 @@ export const CategoryDonutChart: React.FC<{ activities: Activity[]; onSelectCate
     </div>
   );
 };
+
+// 4. Monthly Comparison Chart: actual vs target side-by-side
+export const MonthlyComparisonChart: React.FC<{ activities: Activity[]; isDark: boolean }> = ({ activities, isDark }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(400);
+  const [height] = useState(220);
+  const [hoverIndex, setHoverIndex] = useState<{ monthIdx: number; barType: "actual" | "target" } | null>(null);
+  const [tooltipState, setTooltipState] = useState({ x: 0, y: 0, visible: false, content: "" });
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(Math.max(280, entry.contentRect.width));
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const totalThisMonth = activities.reduce((acc, curr) => acc + curr.carbonAmount, 0);
+
+  // Month data
+  const monthlyData = [
+    { month: "Apr 2026", actual: 290, target: 350 },
+    { month: "May 2026", actual: 310, target: 350 },
+    { month: "Jun 2026", actual: Math.round(totalThisMonth), target: 350 }
+  ];
+
+  const maxVal = Math.max(...monthlyData.map(m => Math.max(m.actual, m.target)), 400);
+  const padding = { left: 40, right: 10, top: 30, bottom: 30 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+
+  return (
+    <div ref={containerRef} className="w-full h-full relative" id="monthly-comparison-chart-container">
+      <Tooltip x={tooltipState.x} y={tooltipState.y} visible={tooltipState.visible} content={tooltipState.content} />
+      <svg width={width} height={height} className="overflow-visible" aria-label="Monthly Comparison Chart Actual vs Target">
+        {/* Horizontal grid lines */}
+        {[0, 0.5, 1].map((ratio, i) => {
+          const y = padding.top + chartHeight * ratio;
+          const labelVal = Math.round(maxVal * (1 - ratio));
+          return (
+            <g key={i} className="opacity-20">
+              <line
+                x1={padding.left}
+                y1={y}
+                x2={width - padding.right}
+                y2={y}
+                stroke={isDark ? "#94a3b8" : "#475569"}
+                strokeWidth="1"
+                strokeDasharray="4 4"
+              />
+              <text
+                x={padding.left - 8}
+                y={y + 4}
+                textAnchor="end"
+                className="text-[10px] font-mono fill-slate-400 dark:fill-slate-500"
+              >
+                {labelVal}
+              </text>
+            </g>
+          );
+        })}
+
+        {monthlyData.map((data, idx) => {
+          // Calculate column centers
+          const sectionWidth = chartWidth / monthlyData.length;
+          const sectionSpace = 16;
+          const barWidth = Math.min(24, (sectionWidth - sectionSpace) / 2 - 4);
+          
+          const sectionLeft = padding.left + idx * sectionWidth;
+          const groupCenter = sectionLeft + sectionWidth / 2;
+          
+          // Actual Bar
+          const actHeight = (data.actual / maxVal) * chartHeight;
+          const actX = groupCenter - barWidth - 2;
+          const actY = padding.top + chartHeight - actHeight;
+
+          // Target Bar
+          const tarHeight = (data.target / maxVal) * chartHeight;
+          const tarX = groupCenter + 2;
+          const tarY = padding.top + chartHeight - tarHeight;
+
+          const activeActual = hoverIndex?.monthIdx === idx && hoverIndex?.barType === "actual";
+          const activeTarget = hoverIndex?.monthIdx === idx && hoverIndex?.barType === "target";
+
+          return (
+            <g key={idx}>
+              {/* Actual emissions bar (Teal/Emerald gradient look) */}
+              <rect
+                x={actX}
+                y={actY}
+                width={barWidth}
+                height={Math.max(actHeight, 4)}
+                fill={isDark ? "#10b981" : "#059669"}
+                fillOpacity={activeActual ? 1 : 0.75}
+                rx="4"
+                className="transition-all duration-300 cursor-pointer"
+                onMouseEnter={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setHoverIndex({ monthIdx: idx, barType: "actual" });
+                  setTooltipState({
+                    x: actX + barWidth / 2,
+                    y: actY,
+                    visible: true,
+                    content: `${data.month} Actual: ${data.actual} kg CO2e`
+                  });
+                }}
+                onMouseLeave={() => {
+                  setHoverIndex(null);
+                  setTooltipState(prev => ({ ...prev, visible: false }));
+                }}
+              />
+
+              {/* Target benchmark bar (Slate/Gray styling) */}
+              <rect
+                x={tarX}
+                y={tarY}
+                width={barWidth}
+                height={Math.max(tarHeight, 4)}
+                fill={isDark ? "#475569" : "#94a3b8"}
+                fillOpacity={activeTarget ? 1 : 0.6}
+                rx="4"
+                className="transition-all duration-300 cursor-pointer"
+                onMouseEnter={(e) => {
+                  setHoverIndex({ monthIdx: idx, barType: "target" });
+                  setTooltipState({
+                    x: tarX + barWidth / 2,
+                    y: tarY,
+                    visible: true,
+                    content: `${data.month} Target: ${data.target} kg CO2e`
+                  });
+                }}
+                onMouseLeave={() => {
+                  setHoverIndex(null);
+                  setTooltipState(prev => ({ ...prev, visible: false }));
+                }}
+              />
+
+              {/* Month label below */}
+              <text
+                x={groupCenter}
+                y={height - 8}
+                textAnchor="middle"
+                className="text-[11px] font-sans font-medium fill-slate-500 dark:fill-slate-400"
+              >
+                {data.month.split(" ")[0]}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+

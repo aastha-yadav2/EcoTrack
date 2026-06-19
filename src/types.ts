@@ -15,6 +15,7 @@ export interface Goal {
   currentKg: number;
   deadline: string;
   isCompleted: boolean;
+  isArchived?: boolean;
 }
 
 export interface Badge {
@@ -58,3 +59,21 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
 }
+
+export interface SavedCalculation {
+  id: string;
+  timestamp: string; // ISO string
+  month: string; // e.g. "2026-06"
+  transportDistance: number;
+  vehicleType: string;
+  electricityUsage: number;
+  waterUsage: number;
+  foodHabit: string;
+  shoppingFrequency: string;
+  emissionsDaily: number;
+  emissionsMonthly: number;
+  emissionsAnnual: number;
+  confidenceScore: number;
+  highestCategory: string;
+}
+
