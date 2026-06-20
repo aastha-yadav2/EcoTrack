@@ -5,6 +5,8 @@
 ### **Track Today. Transform Tomorrow.**
 
 *Empowering sustainable living through Artificial Intelligence.*
+<img src="./Screenshot%202026-06-20%20105354.png" alt="EcoTrack Home Page" width="100%" />
+<br>
 
 [![React](https://img.shields.io/badge/React-19-blue)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)]()
