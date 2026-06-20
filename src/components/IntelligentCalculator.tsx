@@ -457,7 +457,7 @@ export const IntelligentCalculator: React.FC<IntelligentCalculatorProps> = ({
           handleFirestoreError(err, OperationType.LIST, `users/${user.uid}/calculations`)
         );
         
-        if (querySnap) {
+        if (querySnap && typeof querySnap.forEach === "function") {
           const loaded: SavedCalculation[] = [];
           querySnap.forEach((docSnap) => {
             loaded.push(docSnap.data() as SavedCalculation);

@@ -25,6 +25,7 @@ import {
   Cpu
 } from "lucide-react";
 import { Badge, Activity } from "../types";
+import { EcoTrackAPI } from "../services/api";
 
 export interface Challenge {
   id: string;
@@ -198,17 +199,12 @@ export const QuestGamification: React.FC<QuestGamificationProps> = ({
       await onUpdateXPAndPoints(25, 10);
       
       // Request motivating check-in quote
-      const response = await fetch("/api/gamification-advisor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          achievementType: "Daily Check-in Streak",
-          achievementName: `${streakCount + 1}-Day Eco Streak Active`,
-          userLevel: userLevel,
-          streakCount: streakCount + 1
-        })
+      const data = await EcoTrackAPI.getGamificationEncouragement({
+        achievementType: "Daily Check-in Streak",
+        achievementName: `${streakCount + 1}-Day Eco Streak Active`,
+        userLevel: userLevel,
+        streakCount: streakCount + 1
       });
-      const data = await response.json();
       
       setUnlockedBadgeOverlay({
         id: "streak-congratulations",
@@ -243,17 +239,12 @@ export const QuestGamification: React.FC<QuestGamificationProps> = ({
     });
 
     try {
-      const response = await fetch("/api/gamification-advisor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          achievementType: "Weekly Challenge Finished",
-          achievementName: chall.title,
-          userLevel: userLevel,
-          streakCount: streakCount
-        })
+      const resData = await EcoTrackAPI.getGamificationEncouragement({
+        achievementType: "Weekly Challenge Finished",
+        achievementName: chall.title,
+        userLevel: userLevel,
+        streakCount: streakCount
       });
-      const resData = await response.json();
       setUnlockedAiMessage(resData.message || `Outstanding persistence! Finishing ${chall.title} solidifies your local carbon transition plan.`);
     } catch (err) {
       setUnlockedAiMessage(`Spectacular effort! Saving carbon across multiple sectors directly moves your global ranking high.`);
@@ -269,17 +260,12 @@ export const QuestGamification: React.FC<QuestGamificationProps> = ({
       setOverlayLoading(true);
       setUnlockedBadgeOverlay(badge);
       try {
-        const response = await fetch("/api/gamification-advisor", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            achievementType: "Badge Recognition",
-            achievementName: badge.title,
-            userLevel: userLevel,
-            streakCount: streakCount
-          })
+        const resData = await EcoTrackAPI.getGamificationEncouragement({
+          achievementType: "Badge Recognition",
+          achievementName: badge.title,
+          userLevel: userLevel,
+          streakCount: streakCount
         });
-        const resData = await response.json();
         setUnlockedAiMessage(resData.message || badge.description);
       } catch (err) {
         setUnlockedAiMessage(badge.description);
@@ -308,17 +294,12 @@ export const QuestGamification: React.FC<QuestGamificationProps> = ({
         setUnlockedBadgeOverlay(unlockedBadgeObj);
 
         try {
-          const response = await fetch("/api/gamification-advisor", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              achievementType: "Dynamic Badge Unlocked",
-              achievementName: badge.title,
-              userLevel: userLevel,
-              streakCount: streakCount
-            })
+          const resData = await EcoTrackAPI.getGamificationEncouragement({
+            achievementType: "Dynamic Badge Unlocked",
+            achievementName: badge.title,
+            userLevel: userLevel,
+            streakCount: streakCount
           });
-          const resData = await response.json();
           setUnlockedAiMessage(resData.message || `Spectacular carbon sensitivity! Unlocking the "${badge.title}" badge confirms your climate commitments.`);
         } catch (err) {
           setUnlockedAiMessage(badge.description);

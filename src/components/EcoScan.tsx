@@ -26,6 +26,7 @@ import {
   Legend 
 } from "recharts";
 import { Activity } from "../types";
+import { EcoTrackAPI } from "../services/api";
 
 interface EcoScanProps {
   onLogActivity: (newAct: Omit<Activity, "id" | "timestamp">) => void;
@@ -168,22 +169,12 @@ export const EcoScan: React.FC<EcoScanProps> = ({ onLogActivity, isDark }) => {
     }, 1500);
 
     try {
-      const response = await fetch("/api/analyze-document", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileBase64,
-          mimeType,
-          documentType,
-          fileName
-        })
+      const data = await EcoTrackAPI.analyzeDocument({
+        fileBase64,
+        mimeType,
+        documentType,
+        fileName
       });
-
-      if (!response.ok) {
-        throw new Error("Analysis request failed");
-      }
-
-      const data = await response.json();
       setResult(data);
     } catch (err) {
       console.error("Document analysis UI error:", err);

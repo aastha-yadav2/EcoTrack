@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MessageSquare, Send, Sparkles, X, RefreshCw, User, Brain } from "lucide-react";
 import { ChatMessage, Activity } from "../types";
+import { EcoTrackAPI } from "../services/api";
 
 interface AIAssistantProps {
   isOpen: boolean;
@@ -65,21 +66,14 @@ How can I help you optimize your daily transport commute, lower home electrical 
         content: m.content
       }));
 
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          history: historyContext,
-          stats: {
-            currentScore: score,
-            totalActivitiesLoggedCount: activities.length
-          }
-        })
+      const data = await EcoTrackAPI.sendChatMessage({
+        message: text,
+        history: historyContext,
+        stats: {
+          currentScore: score,
+          totalActivitiesLoggedCount: activities.length
+        }
       });
-
-      if (!res.ok) throw new Error("Eco processors timed out.");
-      const data = await res.json();
       
       const modelMsg: ChatMessage = {
         id: `mod-${Date.now()}`,

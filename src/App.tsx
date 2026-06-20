@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 
 import { Activity, Goal, Badge, AIInsight, ChatMessage } from "./types";
+import { EcoTrackAPI } from "./services/api";
 import {
   INITIAL_ACTIVITIES,
   INITIAL_GOALS,
@@ -159,21 +160,14 @@ export default function App() {
         content: m.content
       }));
 
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          history: historyContext,
-          stats: {
-            currentScore: Math.max(15, Math.min(100, Math.round(100 - (carbonTotal * 0.16)))),
-            totalActivitiesLoggedCount: activities.length
-          }
-        })
+      const data = await EcoTrackAPI.sendChatMessage({
+        message: text,
+        history: historyContext,
+        stats: {
+          currentScore: Math.max(15, Math.min(100, Math.round(100 - (carbonTotal * 0.16)))),
+          totalActivitiesLoggedCount: activities.length
+        }
       });
-
-      if (!res.ok) throw new Error("Eco processors timed out.");
-      const data = await res.json();
 
       const modelMsg: ChatMessage = {
         id: `in-mod-${Date.now()}`,
@@ -231,7 +225,7 @@ export default function App() {
           // 2. Fetch or populate activities
           const activitiesCol = collection(db, "users", currentUser.uid, "activities");
           const activitiesSnap = await getDocs(activitiesCol).catch(err => handleFirestoreError(err, OperationType.LIST, `users/${currentUser.uid}/activities`));
-          if (activitiesSnap && !activitiesSnap.empty) {
+          if (activitiesSnap && !activitiesSnap.empty && typeof activitiesSnap.forEach === "function") {
             const acts: Activity[] = [];
             activitiesSnap.forEach((docSnap) => {
               acts.push(docSnap.data() as Activity);
@@ -249,7 +243,7 @@ export default function App() {
           // 3. Fetch or populate goals
           const goalsCol = collection(db, "users", currentUser.uid, "goals");
           const goalsSnap = await getDocs(goalsCol).catch(err => handleFirestoreError(err, OperationType.LIST, `users/${currentUser.uid}/goals`));
-          if (goalsSnap && !goalsSnap.empty) {
+          if (goalsSnap && !goalsSnap.empty && typeof goalsSnap.forEach === "function") {
             const gls: Goal[] = [];
             goalsSnap.forEach((docSnap) => {
               gls.push(docSnap.data() as Goal);
@@ -266,7 +260,7 @@ export default function App() {
           // 4. Fetch or populate badges
           const badgesCol = collection(db, "users", currentUser.uid, "badges");
           const badgesSnap = await getDocs(badgesCol).catch(err => handleFirestoreError(err, OperationType.LIST, `users/${currentUser.uid}/badges`));
-          if (badgesSnap && !badgesSnap.empty) {
+          if (badgesSnap && !badgesSnap.empty && typeof badgesSnap.forEach === "function") {
             const bdgs: Badge[] = [];
             badgesSnap.forEach((docSnap) => {
               bdgs.push(docSnap.data() as Badge);
@@ -322,19 +316,12 @@ export default function App() {
       const carbonSaved = Math.max(0, 480 - carbonTotal);
       const score = Math.max(10, Math.min(100, Math.round(100 - (carbonTotal * 0.18))));
 
-      const res = await fetch("/api/insights", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          activityStats: breakdown,
-          currentScore: score,
-          carbonSaved,
-          carbonTotal
-        })
+      const data = await EcoTrackAPI.getInsights({
+        activityStats: breakdown,
+        currentScore: score,
+        carbonSaved,
+        carbonTotal
       });
-
-      if (!res.ok) throw new Error("Insights system delayed");
-      const data = await res.json();
       
       setAiInsights(data.insights || []);
       setTipOfDay(data.tipOfDay || DYNAMIC_TIPS[0]);

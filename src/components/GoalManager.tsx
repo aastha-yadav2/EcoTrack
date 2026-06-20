@@ -20,6 +20,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import { Goal, Activity } from "../types";
+import { EcoTrackAPI } from "../services/api";
 
 interface GoalManagerProps {
   goals: Goal[];
@@ -234,18 +235,11 @@ export const GoalManager: React.FC<GoalManagerProps> = ({
     const relevantActivities = activities.filter((a) => a.category === goal.category);
 
     try {
-      const res = await fetch("/api/goals-advisor", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          goal,
-          currentProgress: tracking.percentage,
-          relevantActivities: relevantActivities.slice(0, 5) // Send top 5 matching logs
-        })
+      const data = await EcoTrackAPI.getGoalCoaching({
+        goal,
+        currentProgress: tracking.percentage,
+        relevantActivities: relevantActivities.slice(0, 5) // Send top 5 matching logs
       });
-      const data = await res.json();
       setAiSuggestion(data);
     } catch (err) {
       console.error("Failed fetching AI advisory details:", err);
