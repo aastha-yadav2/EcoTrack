@@ -3,20 +3,15 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, doc, getDocFromServer } from "firebase/firestore";
 
 // Resolve Firebase configuration parameters dynamically.
-// These are loaded securely from environment variables, falls back to build-time applet config.
-declare const __FIREBASE_APPLET_CONFIG__: any;
-
-const metaEnv = (import.meta as any).env || {};
-const buildTimeConfig = typeof __FIREBASE_APPLET_CONFIG__ !== "undefined" ? __FIREBASE_APPLET_CONFIG__ : {};
-
+// These are loaded securely from environment variables, preventing key exposure in public repositories.
 const firebaseConfig = {
-  apiKey: metaEnv.VITE_FIREBASE_API_KEY || buildTimeConfig.apiKey || "",
-  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || buildTimeConfig.authDomain || "",
-  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID || buildTimeConfig.projectId || "",
-  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || buildTimeConfig.storageBucket || "",
-  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || buildTimeConfig.messagingSenderId || "",
-  appId: metaEnv.VITE_FIREBASE_APP_ID || buildTimeConfig.appId || "",
-  firestoreDatabaseId: metaEnv.VITE_FIREBASE_DATABASE_ID || buildTimeConfig.firestoreDatabaseId || "",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "",
 };
 
 const app = initializeApp(firebaseConfig);
