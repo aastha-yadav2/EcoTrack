@@ -3,9 +3,24 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
+import fs from 'fs';
+
 export default defineConfig(() => {
+  let firebaseConfig = {};
+  try {
+    const configPath = path.resolve(__dirname, 'firebase-applet-config.json');
+    if (fs.existsSync(configPath)) {
+      firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    }
+  } catch (e) {
+    console.warn('Could not read firebase-applet-config.json:', e);
+  }
+
   return {
     plugins: [react(), tailwindcss()],
+    define: {
+      __FIREBASE_APPLET_CONFIG__: JSON.stringify(firebaseConfig),
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
